@@ -1,0 +1,24 @@
+// -----------------------------------------------------------------------------
+// Required — fill these in before running terraform apply
+// -----------------------------------------------------------------------------
+aws_profile    = "<your-aws-sso-profile>"   // e.g. "my-company-dev"
+aws_account_id = "<your-aws-account-id>"    // e.g. "123456789012"
+aws_region     = "<your-aws-region>"        // e.g. "us-west-2"
+project_name   = "<your-project-name>"      // e.g. "astro-re"
+environment    = "<your-environment>"       // e.g. "dev"
+owner          = "<your-team-name>"         // e.g. "Data Engineering"
+
+// -----------------------------------------------------------------------------
+// Optional — defaults are set in remote_exec.tf; override here if needed
+// -----------------------------------------------------------------------------
+# vpc_cidr  = "10.0.0.0/24"
+# az_count  = 2
+
+// -----------------------------------------------------------------------------
+// Git DAG Bundle (optional) — uncomment and fill in to enable
+// -----------------------------------------------------------------------------
+# git_repo_url = "https://github.com/your-org/your-dags.git"
+# git_username = "your-github-username"
+# git_pat      = "ghp_xxxxxxxxxxxxxxxxxxxx"
+git_branch   = "main"
+dag_subdir   = "dags"
