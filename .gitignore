@@ -12,5 +12,15 @@ airflow.cfg
 airflow.db
 .astro/*.local.yml
 .astro/*.local.yaml
-.terraform
-*.tfvars
+*/infra/.terraform/*
+*/infra/.terraform.lock.hcl
+*/infra/.terraform.tfstate.lock.info
+*/infra/terraform.tfstate
+*/infra/terraform.tfstate.backup
+*/infra/tfplan
+*/k8s/*
+*/airflow/*
+*/astro-project/*
+.claude/settings.local.json
+*/infra/terraform.tfvars
+!*/infra/terraform.tfvars.example
