@@ -24,3 +24,4 @@ airflow.db
 .claude/settings.local.json
 */infra/terraform.tfvars
 !*/infra/terraform.tfvars.example
+*.tfvars
