@@ -1,6 +1,6 @@
 # Astro Remote Execution — Cross-Region Disaster Recovery
 
-This project deploys an [Astro Remote Execution](https://www.astronomer.io/docs/astro/remote-execution-overview) agent across two AWS regions for cross-region disaster recovery. Both regions register against the same Astro [cluster](https://cloud.astronomer.io/settings/clusters/cmqzgljvy857s01ny14w7jgpj), so if the primary region becomes unavailable, the secondary agent picks up task execution with no Astro control-plane changes.
+This project deploys an [Astro Remote Execution](https://www.astronomer.io/docs/astro/remote-execution-overview) agent across two AWS regions for cross-region disaster recovery. Both regions register against the same Astro [cluster](https://cloud.astronomer.io/settings/clusters/cmqzgljvy857s01ny14w7jgpj) and back the same Astro [deployment](https://cloud.astronomer.io/cm7f419mg0no001jhunzjeer1/deployments/cmqzimj5p876501nyl7x8pktw), so if the primary region becomes unavailable, the secondary agent picks up task execution with no Astro control-plane changes.
 
 ## Layout
 
