@@ -1,20 +1,58 @@
+module "primary" {
+  source    = "./modules/remote-exec-region"
+  providers = { aws = aws.primary }
+
+  aws_account_id       = var.aws_account_id
+  project_name         = var.project_name
+  environment          = var.environment
+  owner                = var.owner
+  vpc_cidr             = var.vpc_cidr
+  az_count             = var.az_count
+  development_role_arn = aws_iam_role.development_role.arn
+
+  git_repo_url = var.git_repo_url
+  git_username = var.git_username
+  git_pat      = var.git_pat
+  git_branch   = var.git_branch
+  dag_subdir   = var.dag_subdir
+}
+
+module "failover" {
+  source    = "./modules/remote-exec-region"
+  providers = { aws = aws.failover }
+
+  aws_account_id       = var.aws_account_id
+  project_name         = var.project_name
+  environment          = var.environment
+  owner                = var.owner
+  vpc_cidr             = var.vpc_cidr
+  az_count             = var.az_count
+  development_role_arn = aws_iam_role.development_role.arn
+
+  git_repo_url = var.git_repo_url
+  git_username = var.git_username
+  git_pat      = var.git_pat
+  git_branch   = var.git_branch
+  dag_subdir   = var.dag_subdir
+}
+
+
 // -----------------------------------------------------------------------------
-// Development role (GitHub Actions OIDC -> push to ECR, describe EKS)
+// Global development role (GitHub Actions OIDC -> push to ECR, describe EKS).
+// IAM is account-global, so this is created once and referenced by both regions.
 // -----------------------------------------------------------------------------
 resource "aws_iam_policy" "development_policy" {
-  name        = "${var.project_name}-${var.environment}-development-policy"
-  description = "Dev: push to ECR repo, describe EKS"
+  name        = "${local.global_name}-development-policy"
+  description = "Dev: push to ECR repos in all regions, describe EKS"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-      # ---- ECR (required for docker login) ----
       {
         Sid : "EcrGetAuth",
         Effect : "Allow",
         Action : ["ecr:GetAuthorizationToken"],
         Resource : "*"
       },
-      # ---- ECR push/pull ----
       {
         Sid : "EcrRepoPushPull",
         Effect : "Allow",
@@ -29,9 +67,11 @@ resource "aws_iam_policy" "development_policy" {
           "ecr:DescribeRepositories",
           "ecr:ListImages"
         ],
-        Resource : aws_ecr_repository.remote_exec_demo.arn
+        Resource : [
+          module.primary.ecr_repo_arn,
+          module.failover.ecr_repo_arn,
+        ]
       },
-      # ---- EKS describe so AWS CLI can build kubeconfig ----
       {
         Sid : "EksDescribe",
         Effect : "Allow",
@@ -44,7 +84,7 @@ resource "aws_iam_policy" "development_policy" {
 }
 
 resource "aws_iam_role" "development_role" {
-  name = "${var.project_name}-${var.environment}-development-role"
+  name = "${local.global_name}-development-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -73,21 +113,17 @@ resource "aws_iam_role_policy_attachment" "development_attach_policy" {
   policy_arn = aws_iam_policy.development_policy.arn
 }
 
-output "development_iam_role_arn" {
-  value = aws_iam_role.development_role.arn
-}
-
 // -----------------------------------------------------------------------------
-// Agent role (Astro Remote Execution Agent pods via IRSA)
+// Agent role (Astro Remote Execution Agent pods via IRSA).
+// One global role trusted by the EKS OIDC provider in each region; grants
+// access to S3 buckets and Secrets Manager secrets in both regions.
 // -----------------------------------------------------------------------------
 resource "aws_iam_policy" "agent_policy" {
-  name        = "${var.project_name}-${var.environment}-agent-policy"
-  description = "IAM policy used by Astro Remote Execution Agent Pods"
+  name        = "${local.global_name}-agent-policy"
+  description = "IAM policy used by Astro Remote Execution Agent Pods (multi-region)"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      // Access to Secrets Manager secrets for Airflow connections and variables.
-      // NOTE: Resource uses {project_name}-{environment} prefix to match secret naming convention.
       {
         Sid    = "SecretsManagerAccess"
         Effect = "Allow"
@@ -96,9 +132,11 @@ resource "aws_iam_policy" "agent_policy" {
           "secretsmanager:DescribeSecret",
           "secretsmanager:ListSecrets"
         ]
-        Resource = "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.project_name}-${var.environment}/*"
+        Resource = [
+          "arn:aws:secretsmanager:${module.primary.region}:${var.aws_account_id}:secret:${local.global_name}/*",
+          "arn:aws:secretsmanager:${module.failover.region}:${var.aws_account_id}:secret:${local.global_name}/*",
+        ]
       },
-      // Access to S3 bucket to write task logs and XCom
       {
         Sid    = "S3Access"
         Effect = "Allow"
@@ -108,8 +146,10 @@ resource "aws_iam_policy" "agent_policy" {
           "s3:PutObject"
         ]
         Resource = [
-          module.s3_bucket.s3_bucket_arn,
-          "${module.s3_bucket.s3_bucket_arn}/*"
+          module.primary.s3_bucket_arn,
+          "${module.primary.s3_bucket_arn}/*",
+          module.failover.s3_bucket_arn,
+          "${module.failover.s3_bucket_arn}/*",
         ]
       }
     ]
@@ -118,20 +158,29 @@ resource "aws_iam_policy" "agent_policy" {
 }
 
 resource "aws_iam_role" "agent_role" {
-  name = "${var.project_name}-${var.environment}-agent-role"
+  name = "${local.global_name}-agent-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Principal = {
-          Federated = module.eks.oidc_provider_arn
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect    = "Allow"
+        Principal = { Federated = module.primary.eks_oidc_provider_arn }
+        Action    = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringLike = {
-            "${module.eks.oidc_provider}:aud" = "sts.amazonaws.com"
-            "${module.eks.oidc_provider}:sub" = "system:serviceaccount:default:*"
+            "${module.primary.eks_oidc_provider}:aud" = "sts.amazonaws.com"
+            "${module.primary.eks_oidc_provider}:sub" = "system:serviceaccount:default:*"
+          }
+        }
+      },
+      {
+        Effect    = "Allow"
+        Principal = { Federated = module.failover.eks_oidc_provider_arn }
+        Action    = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringLike = {
+            "${module.failover.eks_oidc_provider}:aud" = "sts.amazonaws.com"
+            "${module.failover.eks_oidc_provider}:sub" = "system:serviceaccount:default:*"
           }
         }
       },
@@ -145,16 +194,13 @@ resource "aws_iam_role_policy_attachment" "agent_attach_policy" {
   policy_arn = aws_iam_policy.agent_policy.arn
 }
 
-output "agent_iam_role_arn" {
-  value = aws_iam_role.agent_role.arn
-}
-
 // -----------------------------------------------------------------------------
-// Astro Orchestration Plane role (remote logging)
+// Astro Orchestration Plane role (remote logging).
+// One global role granted read access to both regional S3 buckets.
 // -----------------------------------------------------------------------------
 resource "aws_iam_policy" "astro_orchestration_plane_policy" {
-  name        = "${var.project_name}-${var.environment}-astro-policy"
-  description = "IAM policy used by Astro Orchestration Plane for remote logging"
+  name        = "${local.global_name}-astro-policy"
+  description = "IAM policy used by Astro Orchestration Plane for remote logging (multi-region)"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -166,8 +212,10 @@ resource "aws_iam_policy" "astro_orchestration_plane_policy" {
           "s3:GetObject"
         ]
         Resource = [
-          module.s3_bucket.s3_bucket_arn,
-          "${module.s3_bucket.s3_bucket_arn}/*"
+          module.primary.s3_bucket_arn,
+          "${module.primary.s3_bucket_arn}/*",
+          module.failover.s3_bucket_arn,
+          "${module.failover.s3_bucket_arn}/*",
         ]
       }
     ]
@@ -175,9 +223,9 @@ resource "aws_iam_policy" "astro_orchestration_plane_policy" {
   tags = local.tags
 }
 
-// placeholder - once Astro deployment is created, we will update the trust policy to allow Astro to assume this role
+# placeholder - once Astro deployment is created, update the trust policy to allow Astro to assume this role
 resource "aws_iam_role" "astro_orchestration_plane_role" {
-  name = "${var.project_name}-${var.environment}-astro-role"
+  name = "${local.global_name}-astro-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -200,8 +248,4 @@ resource "aws_iam_role" "astro_orchestration_plane_role" {
 resource "aws_iam_role_policy_attachment" "astro_orchestration_plane_attach_policy" {
   role       = aws_iam_role.astro_orchestration_plane_role.name
   policy_arn = aws_iam_policy.astro_orchestration_plane_policy.arn
-}
-
-output "astro_orchestration_plane_iam_role_arn" {
-  value = aws_iam_role.astro_orchestration_plane_role.arn
 }

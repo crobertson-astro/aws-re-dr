@@ -8,9 +8,18 @@ variable "aws_account_id" {
   type        = string
 }
 
-variable "aws_region" {
-  description = "AWS region to deploy resources"
+variable "primary_region" {
+  description = "Primary AWS region for the active deployment"
   type        = string
+}
+
+variable "failover_region" {
+  description = "Failover AWS region for the DR replica"
+  type        = string
+  validation {
+    condition     = var.failover_region != var.primary_region
+    error_message = "failover_region must differ from primary_region."
+  }
 }
 
 variable "project_name" {
@@ -29,31 +38,31 @@ variable "owner" {
 }
 
 variable "vpc_cidr" {
-  description = "CIDR block for the VPC, /24 minimum"
+  description = "CIDR block for the VPC, /24 minimum. Used for both regions."
   type        = string
-  default     = "10.0.0.0/24" //256 IPs
+  default     = "10.0.0.0/24"
 }
 
 variable "az_count" {
-  description = "Number of Availability Zones to use"
+  description = "Number of Availability Zones to use per region"
   type        = number
   default     = 2
 }
 
 variable "git_repo_url" {
-  description = "Full HTTPS URL of the Git repository containing your DAGs (e.g. https://github.com/your-org/your-dags.git). Leave null to skip GitDagBundle setup."
+  description = "Full HTTPS URL of the Git repository containing your DAGs. Leave null to skip GitDagBundle setup."
   type        = string
   default     = null
 }
 
 variable "git_username" {
-  description = "GitHub username or service account name associated with the PAT. Required if git_repo_url is set."
+  description = "GitHub username or service account name associated with the PAT."
   type        = string
   default     = null
 }
 
 variable "git_pat" {
-  description = "GitHub Personal Access Token with Contents: Read-only permission scoped to the DAG repository. Required if git_repo_url is set."
+  description = "GitHub PAT with Contents: Read-only on the DAG repository."
   type        = string
   sensitive   = true
   default     = null
