@@ -1,0 +1,1 @@
+FROM images.astronomer.cloud/baseimages/astro-remote-execution-agent:3.2-5-python-3.14-astro-agent-1.7.1

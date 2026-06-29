@@ -1,0 +1,4 @@
+project:
+    name: astro
+remote:
+    client_registry: 285860431378.dkr.ecr.us-west-2.amazonaws.com/re-dr-dev-registry
