@@ -10,11 +10,11 @@ resourceNamePrefix: aws-re-dr
 # If set to false, the namespace must be created manually before deploying the chart
 # If you are passing imagePullSecretName and agentTokenSecretName, you must set this to false,
 # and create the namespace manually with the imagePullSecret and agentToken secret
-createNamespace: true
+createNamespace: false
 # Namespace where the Astro Remote Agent Deployments are to be deployed
 # If createNamespace is set to true, the helm chart will create the namespace with the name specified
 # If createNamespace is set to false, the namespace must be created manually and then passed to the chart
-namespace: aws-re-dr
+namespace: default
 
 # astroDeploymentAPIURL is the URL of the Astro Deployment's API server
 # The API URL of the API Server running in the Astro Orchestration Plane.
