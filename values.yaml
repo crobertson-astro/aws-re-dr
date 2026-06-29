@@ -23,7 +23,7 @@ astroDeploymentAPIURL: https://cmqzgljvy857s01ny14w7jgpj.external.astronomer.run
 
 # The image for the Astro Remote Execution Agent components: Workers, DAG Processor, and Triggerer
 # can be overridden at the component level
-image: images.astronomer.cloud/baseimages/astro-remote-execution-agent:3.2-2-python-3.13-astro-agent-1.6.0
+image: 285860431378.dkr.ecr.us-west-2.amazonaws.com/re-dr-dev-registry:deploy-2026-06-29T18-55
 
 # The imagePullPolicy for the Astro Remote Execution Agent components: Workers, DAG Processor, and Triggerer
 # ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
