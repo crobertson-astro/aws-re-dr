@@ -14,6 +14,8 @@ This project deploys an [Astro Remote Execution](https://www.astronomer.io/docs/
 Each region is a separate Terraform workspace using its own `.tfvars` file. From [aws/infra/](aws/infra/):
 
 ```bash
+aws sso login
+
 # Primary
 terraform workspace new west2 || terraform workspace select west2
 terraform apply -var-file=west2.tfvars

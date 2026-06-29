@@ -25,3 +25,4 @@ airflow.db
 */infra/terraform.tfvars
 !*/infra/terraform.tfvars.example
 *.tfvars
+*.tfstate*
