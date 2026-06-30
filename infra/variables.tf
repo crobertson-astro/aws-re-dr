@@ -140,12 +140,6 @@ variable "deployment_is_cicd_enforced" {
   default     = false
 }
 
-variable "deployment_is_dag_deploy_enabled" {
-  description = "Enable DAG-only deploys for this deployment"
-  type        = bool
-  default     = true
-}
-
 variable "deployment_is_development_mode" {
   description = "Mark this deployment as development mode (allows hibernation, no SLAs)"
   type        = bool

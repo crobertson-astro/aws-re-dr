@@ -49,7 +49,7 @@ resource "astro_deployment" "this" {
 
   scheduler_size        = var.deployment_scheduler_size
   is_cicd_enforced      = var.deployment_is_cicd_enforced
-  is_dag_deploy_enabled = var.deployment_is_dag_deploy_enabled
+  is_dag_deploy_enabled = false
   is_development_mode   = var.deployment_is_development_mode
   is_high_availability  = var.deployment_is_high_availability
   contact_emails        = var.deployment_contact_emails
