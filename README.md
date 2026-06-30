@@ -43,7 +43,7 @@ terraform apply
 
 Per-region outputs are namespaced under `primary` and `failover` (e.g. `terraform output -json primary | jq -r .ecr_repo_url`). Global IAM role ARNs and the Astro cluster/deployment IDs are top-level outputs.
 
-Then follow [infra/README.md](infra/README.md) for each region — build/push the agent image to that region's ECR, install the Helm chart against that region's EKS cluster using [values.yaml](values.yaml) tailored to the region, and verify the agent in the Astro UI.
+Then follow [infra/README.md](infra/README.md) from Step 4 for each region — build/push the agent image to that region's ECR, install the Helm chart against that region's EKS cluster using [values.yaml](values.yaml) tailored to the region, and verify the agent in the Astro UI.
 
 ## Failing over
 
