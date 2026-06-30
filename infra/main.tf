@@ -53,7 +53,23 @@ resource "astro_deployment" "this" {
   is_development_mode   = var.deployment_is_development_mode
   is_high_availability  = var.deployment_is_high_availability
   contact_emails        = var.deployment_contact_emails
-  environment_variables = var.deployment_environment_variables
+  environment_variables = [
+    {
+      is_secret = false
+      key = "OPENLINEAGE_DISABLED"
+      value = "False"
+    },
+    {
+      is_secret = false
+      key       = "AIRFLOW__LOGGING__REMOTE_LOGGING"
+      value     = "True"
+    },
+    {
+      is_secret = false
+      key = "AIRFLOW__SECRETS__BACKEND_KWARGS"
+      value     = "{\"connections_prefix\": \"airflow/connections\", \"variables_prefix\": \"airflow/variables\", \"role_arn\": \"${module.aws.agent_iam_role_arn}\"}"
+    }
+  ]
 
   desired_workload_identity = module.aws.agent_iam_role_arn
   remote_execution = {
@@ -61,4 +77,21 @@ resource "astro_deployment" "this" {
     allowed_ip_address_ranges = []
     task_log_bucket = var.cluster_is_failed_over ? module.aws.failover.s3_bucket_name : module.aws.primary.s3_bucket_name
   }
+}
+
+resource "astro_agent_token" "remote_exec" {
+  deployment_id = astro_deployment.this.id
+  name = "remote-exec-agent-token"
+  description   = "Remote execution agent token"
+}
+
+resource "astro_api_token" "deployment_admin" {
+  name        = "remote-exec-deployment-admin-token"
+  description = "Remote execution deployment admin token"
+  type        = "DEPLOYMENT"
+  roles = [{
+    "role" : "DEPLOYMENT_ADMIN",
+    "entity_id" : astro_deployment.this.id,
+    "entity_type" : "DEPLOYMENT"
+  }]
 }

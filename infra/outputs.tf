@@ -45,3 +45,13 @@ output "astro_cluster_id" {
 output "astro_deployment_id" {
   value = astro_deployment.this.id
 }
+
+output "astro_agent_token" {
+  sensitive = true
+  value     = astro_agent_token.remote_exec.token
+}
+
+output "astro_deployment_admin_token" {
+  sensitive = true
+  value     = astro_api_token.deployment_admin.token
+}
