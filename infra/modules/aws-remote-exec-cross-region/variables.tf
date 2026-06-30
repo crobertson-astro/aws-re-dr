@@ -1,25 +1,6 @@
-variable "aws_profile" {
-  description = "Your AWS CLI profile name created with 'aws sso configure'"
-  type        = string
-}
-
 variable "aws_account_id" {
   description = "AWS Account ID to deploy resources into"
   type        = string
-}
-
-variable "primary_region" {
-  description = "Primary AWS region for the active deployment"
-  type        = string
-}
-
-variable "failover_region" {
-  description = "Failover AWS region for the DR replica"
-  type        = string
-  validation {
-    condition     = var.failover_region != var.primary_region
-    error_message = "failover_region must differ from primary_region."
-  }
 }
 
 variable "project_name" {

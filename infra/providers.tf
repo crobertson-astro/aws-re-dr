@@ -16,3 +16,7 @@ provider "aws" {
   region  = var.failover_region
   profile = var.aws_profile
 }
+
+provider "astro" {
+  organization_id = var.astro_organization_id
+}

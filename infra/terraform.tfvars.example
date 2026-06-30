@@ -10,6 +10,14 @@ environment     = "<your-environment>"      // e.g. "dev"
 owner           = "<your-team-name>"        // e.g. "Data Engineering"
 
 // -----------------------------------------------------------------------------
+// Astro — required
+// -----------------------------------------------------------------------------
+astro_organization_id = "<your-astro-organization-id>"
+workspace_id          = "<your-astro-workspace-id>"
+cluster_name          = "<your-cluster-name>"     // e.g. "aws-re-dr-cluster"
+deployment_name       = "<your-deployment-name>"  // e.g. "aws-re-dr-deployment"
+
+// -----------------------------------------------------------------------------
 // Optional — override here if needed
 // -----------------------------------------------------------------------------
 # vpc_cidr  = "10.0.0.0/24"   // applied to both regions

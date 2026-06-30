@@ -1,5 +1,5 @@
 module "primary" {
-  source    = "./modules/remote-exec-region"
+  source    = "../aws-remote-exec-region"
   providers = { aws = aws.primary }
 
   aws_account_id       = var.aws_account_id
@@ -18,7 +18,7 @@ module "primary" {
 }
 
 module "failover" {
-  source    = "./modules/remote-exec-region"
+  source    = "../aws-remote-exec-region"
   providers = { aws = aws.failover }
 
   aws_account_id       = var.aws_account_id
