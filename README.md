@@ -6,7 +6,7 @@ Flipping `cluster_is_failed_over` in `terraform.tfvars` redirects deployment inf
 
 ## Layout
 
-- [infra/](infra/) — Terraform root module. Provisions global IAM and the Astro cluster/deployment, and invokes the regional module twice. See [infra/README.md](infra/README.md) for the full walkthrough.
+- [infra/](infra/) — Terraform root module. Provisions global IAM and the Astro cluster/deployment/tokens, and invokes the regional module twice. See [infra/README.md](infra/README.md) for the full walkthrough.
   - [infra/modules/aws-remote-exec-cross-region/](infra/modules/aws-remote-exec-cross-region/) — wraps both regional invocations and creates the IAM roles shared across regions (development, agent IRSA, Astro orchestration plane).
   - [infra/modules/aws-remote-exec-region/](infra/modules/aws-remote-exec-region/) — per-region resources: VPC, EKS, S3, ECR, Secrets Manager.
 - [astro/](astro/) — Astro project (DAGs, Dockerfile, requirements)

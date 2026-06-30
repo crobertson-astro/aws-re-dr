@@ -96,7 +96,7 @@ agentTokenSecretName: agent-token
 # The Airflow secret backend class to use for the Agent
 # Example: "airflow.secrets.local_filesystem.LocalFilesystemBackend"
 # Note: The rest of the configuration is to be passed as environment variables to the Agent components
-secretBackend: airflow.secrets.local_filesystem.LocalFilesystemBackend
+secretBackend: airflow.providers.amazon.aws.secrets.secrets_manager.SecretsManagerBackend
 
 # Airflow xcom backend class to use for the Agent
 # Example: "airflow.providers.common.io.xcom.backend.XComObjectStorageBackend"
