@@ -1,0 +1,221 @@
+# https://www.astronomer.io/docs/astro/remote-agents-helm-reference
+resourceNamePrefix: aws-re-dr
+createNamespace: false
+namespace: default
+astroDeploymentAPIURL: ~
+image: ~
+imagePullPolicy: IfNotPresent
+imagePullSecretName: ~
+agentTokenSecretName: ~
+secretBackend: airflow.providers.amazon.aws.secrets.secrets_manager.SecretsManagerBackend
+xcomBackend: airflow.providers.common.io.xcom.backend.XComObjectStorageBackend
+dagBundleConfigList: '[{"name": "dags-folder", "classpath": "airflow.dag_processing.bundles.local.LocalDagBundle", "kwargs": {}}]'
+commonEnv: []
+openLineage:
+  enabled: true
+  namespace: ~
+  apiKeySecret: ~
+  url: https://o11y.astronomer.io
+  endpoint: /api/v1/lineage?ASTRO_DEPLOYMENT_ID=~&ASTRO_DEPLOYMENT_NAMESPACE=~&ASTRO_ORGANIZATION_ID=~&ASTRO_WORKSPACE_ID=~
+  facetsEnvironmentVariables: ["ASTRO_ORGANIZATION_ID","ASTRO_WORKSPACE_ID","ASTRO_DEPLOYMENT_ID","ASTRO_DEPLOYMENT_NAMESPACE"]
+logLevel: INFO
+labels: {}
+annotations: {}
+podSecurityContext:
+  runAsUser: 50000
+  fsGroup: 50000
+  runAsNonRoot: true
+containerSecurityContext: {}
+serviceAccount:
+  annotations: {}
+  workers:
+    create: true
+    annotations: {}
+  dagProcessor:
+    create: true
+    annotations: {}
+  triggerer:
+    create: true
+    annotations: {}
+  sentinel:
+    create: true
+    annotations: {}
+loggingSidecar:
+  enabled: false
+  name: vector-logging-sidecar
+  image: timberio/vector:0.45.0-debian
+  imagePullPolicy: IfNotPresent
+  preStopSleepSeconds: 5
+  env: []
+  securityContext: {}
+  volumeMounts: []
+  resources: {}
+workers:
+  - name: default-worker
+    queues: default
+    replicas: 1
+    syncSlots: 20
+    resources:
+      limits:
+        cpu: "1"
+        ephemeral-storage: "1Gi"
+        memory: "2Gi"
+      requests:
+        cpu: "1"
+        ephemeral-storage: "1Gi"
+        memory: "2Gi"
+    env: []
+    hpa:
+      enabled: false
+      minReplicaCount: 1
+      maxReplicaCount: 1
+      metric:
+        enabled: true
+        name: astro_agent_client_queued_or_running_tasks
+        target:
+          type: Value
+          value: 20
+      extraMetrics: []
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Pods
+              value: 1
+              periodSeconds: 60
+        scaleDown:
+          stabilizationWindowSeconds: 300
+      terminationGracePeriodSeconds: 600
+      livenessProbe:
+        httpGet:
+          path: healthz
+          port: 39091
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 3
+        successThreshold: 1
+        timeoutSeconds: 5
+      readinessProbe:
+        httpGet:
+          path: healthz
+          port: 39091
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 3
+        successThreshold: 1
+        timeoutSeconds: 5
+    containerSecurityContext: {}
+    initContainers: []
+    extraContainers: []
+    volumes: []
+    volumeMounts: []
+    canUseKubernetesPodOperator: false
+dagProcessor:
+  resources:
+    limits:
+      cpu: "1"
+      ephemeral-storage: "1Gi"
+      memory: "2Gi"
+    requests:
+      cpu: "1"
+      ephemeral-storage: "1Gi"
+      memory: "2Gi"
+  env: []
+  livenessProbe:
+    httpGet:
+      path: healthz
+      port: 39091
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: healthz
+      port: 39091
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+    timeoutSeconds: 5
+  containerSecurityContext: {}
+  initContainers: []
+  extraContainers: []
+  volumes: []
+  volumeMounts: []
+triggerer:
+  replicas: 1
+  asyncSlots: 1000
+  resources:
+    limits:
+      cpu: "1"
+      ephemeral-storage: "1Gi"
+      memory: "2Gi"
+    requests:
+      cpu: "1"
+      ephemeral-storage: "1Gi"
+      memory: "2Gi"
+  env: []
+  livenessProbe:
+    httpGet:
+      path: healthz
+      port: 39091
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: healthz
+      port: 39091
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+    timeoutSeconds: 5
+  containerSecurityContext: {}
+  initContainers: []
+  extraContainers: []
+  volumes: []
+  volumeMounts: []
+sentinel:
+  enabled: true
+  image: images.astronomer.cloud/baseimages/astro-remote-execution-sentinel:1.7.2
+  imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: "500m"
+      ephemeral-storage: "1Gi"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      ephemeral-storage: "1Gi"
+      memory: "128Mi"
+  env: []
+  port: 8080
+  livenessProbe:
+    httpGet:
+      path: health
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: health
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+    timeoutSeconds: 5
+  containerSecurityContext: {}
+  initContainers: []
+  extraContainers: []
+  volumes: []
+  volumeMounts: []
+                                                                              
