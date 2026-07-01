@@ -26,8 +26,12 @@ Flipping `cluster_is_failed_over` in `terraform.tfvars` redirects deployment inf
 - Docker
 
 ```bash
+# configure terraform credentials
 aws sso login
 export ASTRO_API_TOKEN=<your-org-admin-token>
+
+# configure Astro image deployment credentials
+astro login
 ```
 
 ## Deploying
