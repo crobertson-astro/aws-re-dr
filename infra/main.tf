@@ -71,7 +71,7 @@ resource "astro_deployment" "this" {
     }
   ]
 
-  desired_workload_identity = module.aws.agent_iam_role_arn
+  desired_workload_identity = module.aws.astro_orchestration_plane_iam_role_arn
   remote_execution = {
     enabled = true
     allowed_ip_address_ranges = []
