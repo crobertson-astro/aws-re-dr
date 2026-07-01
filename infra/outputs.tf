@@ -54,8 +54,8 @@ output "astro_deployment_id" {
   value = astro_deployment.this.id
 }
 
-output "astro_deployment_api_url" {
-  value = astro_deployment.this.webserver_url
+output "astro_deployment_webserver_ingress_hostname" {
+  value = astro_deployment.this.webserver_ingress_hostname
 }
 
 output "astro_deployment_namespace" {
