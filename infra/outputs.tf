@@ -38,12 +38,28 @@ output "failover_helm_airflow_conn_git_repo" {
 // -----------------------------------------------------------------------------
 // Astro
 // -----------------------------------------------------------------------------
+output "astro_organization_id" {
+  value = var.astro_organization_id
+}
+
+output "astro_workspace_id" {
+  value = var.workspace_id
+}
+
 output "astro_cluster_id" {
   value = astro_cluster.this.id
 }
 
 output "astro_deployment_id" {
   value = astro_deployment.this.id
+}
+
+output "astro_deployment_api_url" {
+  value = astro_deployment.this.webserver_url
+}
+
+output "astro_deployment_namespace" {
+  value = astro_deployment.this.namespace
 }
 
 output "astro_agent_token" {
