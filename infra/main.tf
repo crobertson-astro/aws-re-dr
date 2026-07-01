@@ -33,8 +33,8 @@ resource "astro_cluster" "this" {
   # Hardcoded: astro provider v1.2.6 ValidateConfig treats variable references
   # as Unknown and errors out. Must match var.failover_region.
   # See: https://github.com/astronomer/terraform-provider-astro/issues/197
-  dr_region           = "us-west-1"
-  dr_vpc_subnet_range = var.cluster_dr_vpc_subnet_range
+  dr_region                       = "us-west-1"
+  dr_vpc_subnet_range             = var.cluster_dr_vpc_subnet_range
   enable_replication_time_control = var.cluster_enable_replication_time_control
   is_failed_over                  = var.cluster_is_failed_over
 }
@@ -56,8 +56,8 @@ resource "astro_deployment" "this" {
   environment_variables = [
     {
       is_secret = false
-      key = "OPENLINEAGE_DISABLED"
-      value = "False"
+      key       = "OPENLINEAGE_DISABLED"
+      value     = "False"
     },
     {
       is_secret = false
@@ -66,22 +66,22 @@ resource "astro_deployment" "this" {
     },
     {
       is_secret = false
-      key = "AIRFLOW__SECRETS__BACKEND_KWARGS"
+      key       = "AIRFLOW__SECRETS__BACKEND_KWARGS"
       value     = "{\"connections_prefix\": \"airflow/connections\", \"variables_prefix\": \"airflow/variables\", \"role_arn\": \"${module.aws.agent_iam_role_arn}\"}"
     }
   ]
 
   desired_workload_identity = module.aws.astro_orchestration_plane_iam_role_arn
   remote_execution = {
-    enabled = true
+    enabled                   = true
     allowed_ip_address_ranges = []
-    task_log_bucket = var.cluster_is_failed_over ? module.aws.failover.s3_bucket_name : module.aws.primary.s3_bucket_name
+    task_log_bucket           = var.cluster_is_failed_over ? module.aws.failover.s3_bucket_name : module.aws.primary.s3_bucket_name
   }
 }
 
 resource "astro_agent_token" "remote_exec" {
   deployment_id = astro_deployment.this.id
-  name = "remote-exec-agent-token"
+  name          = "remote-exec-agent-token"
   description   = "Remote execution agent token"
 }
 

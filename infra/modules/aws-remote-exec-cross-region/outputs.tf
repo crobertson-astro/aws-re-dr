@@ -21,6 +21,7 @@ output "primary" {
   value = {
     region                         = module.primary.region
     vpc_id                         = module.primary.vpc_id
+    ecr_repo_name                  = module.primary.ecr_repo_name
     ecr_repo_url                   = module.primary.ecr_repo_url
     eks_cluster_name               = module.primary.eks_cluster_name
     s3_bucket_name                 = module.primary.s3_bucket_name
@@ -34,6 +35,7 @@ output "failover" {
   value = {
     region                         = module.failover.region
     vpc_id                         = module.failover.vpc_id
+    ecr_repo_name                  = module.failover.ecr_repo_name
     ecr_repo_url                   = module.failover.ecr_repo_url
     eks_cluster_name               = module.failover.eks_cluster_name
     s3_bucket_name                 = module.failover.s3_bucket_name

@@ -6,6 +6,10 @@ output "vpc_id" {
   value = aws_vpc.remote_exec_vpc.id
 }
 
+output "ecr_repo_name" {
+  value = aws_ecr_repository.remote_exec_demo.name
+}
+
 output "ecr_repo_url" {
   value = aws_ecr_repository.remote_exec_demo.repository_url
 }
