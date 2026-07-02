@@ -28,9 +28,9 @@ import requests
 # Define the basic parameters of the DAG, like schedule and start_date
 @dag(
     start_date=datetime(2025, 4, 22),
-    schedule="*/2 * * * *",  # Run every 2 minutes
+    schedule="*/5 * * * *",  # Run every 5 minutes
     doc_md=__doc__,
-    default_args={"owner": "Astro", "retries": 3},
+    default_args={"owner": "Astro", "retries": 0},
     tags=["example"],
 )
 def example_astronauts():
