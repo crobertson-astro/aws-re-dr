@@ -15,6 +15,16 @@ commonEnv:
     value: 0
   - name: AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_COMPRESSION
     value: zip
+  - name: AIRFLOW__LOGGING__REMOTE_LOGGING
+    value: "True"
+  - name: AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID
+    value: "astro_aws_logging"
+  - name: AIRFLOW_CONN_ASTRO_AWS_LOGGING
+    value: "s3://"
+  - name: AIRFLOW__LOGGING__LOGGING_CONFIG_CLASS
+    value: "astronomer.runtime.logging.logging_config"
+  - name: ASTRONOMER_ENVIRONMENT
+    value: "cloud"
 openLineage:
   enabled: true
   namespace: ~

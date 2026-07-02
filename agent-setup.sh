@@ -14,6 +14,7 @@ cd ..
 
 echo "Parsing Terraform outputs..."
 AGENT_TOKEN=$(echo $TF_OUTPUT_JSON | jq -r .astro_agent_token.value)
+AGENT_IAM_ROLE_ARN=$(echo $TF_OUTPUT_JSON | jq -r .agent_iam_role_arn.value)
 DEPLOYMENT_ADMIN_TOKEN=$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_admin_token.value)
 
 ASTRO_DEPLOYMENT_API_URL=https://$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_webserver_ingress_hostname.value | sed 's/.astronomer.run/.external.astronomer.run/')
@@ -81,10 +82,11 @@ helm install astro-agent astronomer/astro-remote-execution-agent \
     {\"name\":\"ASTRO_WORKSPACE_ID\",\"value\":\"$ASTRO_WORKSPACE_ID\"}, \
     {\"name\":\"ASTRO_DEPLOYMENT_ID\",\"value\":\"$ASTRO_DEPLOYMENT_ID\"}, \
     {\"name\":\"ASTRO_DEPLOYMENT_NAMESPACE\",\"value\":\"$ASTRO_DEPLOYMENT_NAMESPACE\"}, \
-    {\"name\":\"AWS_REGION\",\"value\":\"$PRIMARY_REGION\"} \
-    {\"name\": \"AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH\",\"value\":\"s3://$PRIMARY_S3_BUCKET_NAME/xcom\"} \
+    {\"name\":\"AWS_REGION\",\"value\":\"$PRIMARY_REGION\"}, \
+    {\"name\":\"AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH\",\"value\":\"s3://$PRIMARY_S3_BUCKET_NAME/xcom\"}, \
+    {\"name\":\"AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER\",\"value\":\"s3://$PRIMARY_S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID\"} \
   ]" \
-  --set annotations."eks.amazonaws.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$IAM_ROLE_NAME \
+  --set-string annotations."eks\.amazonaws\.com/role-arn"="$AGENT_IAM_ROLE_ARN" \
   --set openLineage.namespace=$ASTRO_DEPLOYMENT_NAMESPACE \
   --set openLineage.endpoint="/api/v1/lineage?ASTRO_DEPLOYMENT_ID=$ASTRO_DEPLOYMENT_ID&ASTRO_DEPLOYMENT_NAMESPACE=$ASTRO_DEPLOYMENT_NAMESPACE&ASTRO_ORGANIZATION_ID=$ASTRO_ORGANIZATION_ID&ASTRO_WORKSPACE_ID=$ASTRO_WORKSPACE_ID" \
   --set openLineage.apiKeySecret=deployment-api-token
