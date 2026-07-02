@@ -20,17 +20,24 @@ first DAG tutorial: https://www.astronomer.io/docs/learn/get-started-with-airflo
 ![Picture of the ISS](https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2010/02/space_station_over_earth/10293696-3-eng-GB/Space_Station_over_Earth_card_full.jpg)
 """
 
+import os
+
 from airflow.sdk import Asset, dag, task
 from pendulum import datetime
 import requests
 
+IS_DR_ENV = os.getenv("ASTRONOMER_IS_DR_ENV", "False") == "True"
 
 # Define the basic parameters of the DAG, like schedule and start_date
 @dag(
     start_date=datetime(2025, 4, 22),
     schedule="*/5 * * * *",  # Run every 5 minutes
     doc_md=__doc__,
-    default_args={"owner": "Astro", "retries": 0},
+    default_args=dict(
+        owner="Astro", 
+        retries=0,
+        queue="default-primary" if not IS_DR_ENV else "default-failover",
+    ),
     tags=["example"],
 )
 def example_astronauts():
