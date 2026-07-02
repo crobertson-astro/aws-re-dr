@@ -78,19 +78,25 @@ for REGION_KEY in failover primary; do
     --set image=$ECR_REPO_URL:$IMAGE_TAG \
     --set imagePullSecretName=image-pull-secret \
     --set agentTokenSecretName=agent-token \
-    --set-json commonEnv="[ \
-      {\"name\":\"ASTRO_ORGANIZATION_ID\",\"value\":\"$ASTRO_ORGANIZATION_ID\"}, \
-      {\"name\":\"ASTRO_WORKSPACE_ID\",\"value\":\"$ASTRO_WORKSPACE_ID\"}, \
-      {\"name\":\"ASTRO_DEPLOYMENT_ID\",\"value\":\"$ASTRO_DEPLOYMENT_ID\"}, \
-      {\"name\":\"ASTRO_DEPLOYMENT_NAMESPACE\",\"value\":\"$ASTRO_DEPLOYMENT_NAMESPACE\"}, \
-      {\"name\":\"AWS_REGION\",\"value\":\"$REGION\"}, \
-      {\"name\":\"AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH\",\"value\":\"s3://$S3_BUCKET_NAME/xcom\"}, \
-      {\"name\":\"AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER\",\"value\":\"s3://$S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID\"} \
-    ]" \
-    --set-string annotations."eks\.amazonaws\.com/role-arn"="$AGENT_IAM_ROLE_ARN" \
+    --set commonEnv[0].name=ASTRO_ORGANIZATION_ID \
+    --set commonEnv[0].value=$ASTRO_ORGANIZATION_ID \
+    --set commonEnv[1].name=ASTRO_WORKSPACE_ID \
+    --set commonEnv[1].value=$ASTRO_WORKSPACE_ID \
+    --set commonEnv[2].name=ASTRO_DEPLOYMENT_ID \
+    --set commonEnv[2].value=$ASTRO_DEPLOYMENT_ID \
+    --set commonEnv[3].name=ASTRO_DEPLOYMENT_NAMESPACE \
+    --set commonEnv[3].value=$ASTRO_DEPLOYMENT_NAMESPACE \
+    --set commonEnv[4].name=AWS_REGION \
+    --set commonEnv[4].value=$REGION \
+    --set commonEnv[5].name=AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH \
+    --set commonEnv[5].value=s3://$S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID/xcom \
+    --set commonEnv[6].name=AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER \
+    --set commonEnv[6].value=s3://$S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID \
+    --set annotations."eks\.amazonaws\.com/role-arn"="$AGENT_IAM_ROLE_ARN" \
     --set openLineage.namespace=$ASTRO_DEPLOYMENT_NAMESPACE \
     --set openLineage.endpoint="/api/v1/lineage?ASTRO_DEPLOYMENT_ID=$ASTRO_DEPLOYMENT_ID&ASTRO_DEPLOYMENT_NAMESPACE=$ASTRO_DEPLOYMENT_NAMESPACE&ASTRO_ORGANIZATION_ID=$ASTRO_ORGANIZATION_ID&ASTRO_WORKSPACE_ID=$ASTRO_WORKSPACE_ID" \
-    --set openLineage.apiKeySecret=deployment-api-token
+    --set openLineage.apiKeySecret=deployment-api-token \
+    --set workers[0].queues=default-$REGION_KEY
 
   echo "$REGION_KEY: Deployment complete."
 done

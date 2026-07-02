@@ -11,8 +11,22 @@ secretBackend: airflow.providers.amazon.aws.secrets.secrets_manager.SecretsManag
 xcomBackend: airflow.providers.common.io.xcom.backend.XComObjectStorageBackend
 dagBundleConfigList: '[{"name": "dags-folder", "classpath": "airflow.dag_processing.bundles.local.LocalDagBundle", "kwargs": {}}]'
 commonEnv:
+  - name: ASTRO_ORGANIZATION_ID
+    value: ~
+  - name: ASTRO_WORKSPACE_ID
+    value: ~
+  - name: ASTRO_DEPLOYMENT_ID
+    value: ~
+  - name: ASTRO_DEPLOYMENT_NAMESPACE
+    value: ~
+  - name: AWS_REGION
+    value: ~
+  - name: AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH
+    value: ~
+  - name: AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER
+    value: ~
   - name: AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_THRESHOLD
-    value: 0
+    value: "0"
   - name: AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_COMPRESSION
     value: zip
   - name: AIRFLOW__LOGGING__REMOTE_LOGGING
