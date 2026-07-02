@@ -10,7 +10,11 @@ agentTokenSecretName: ~
 secretBackend: airflow.providers.amazon.aws.secrets.secrets_manager.SecretsManagerBackend
 xcomBackend: airflow.providers.common.io.xcom.backend.XComObjectStorageBackend
 dagBundleConfigList: '[{"name": "dags-folder", "classpath": "airflow.dag_processing.bundles.local.LocalDagBundle", "kwargs": {}}]'
-commonEnv: []
+commonEnv:
+  - name: AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_THRESHOLD
+    value: 0
+  - name: AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_COMPRESSION
+    value: zip
 openLineage:
   enabled: true
   namespace: ~
