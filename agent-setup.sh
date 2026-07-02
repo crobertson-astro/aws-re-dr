@@ -27,7 +27,7 @@ echo "Initalizing Helm..."
 helm repo add astronomer https://helm.astronomer.io
 helm repo update
 
-for REGION_KEY in primary failover; do
+for REGION_KEY in failover primary; do
   echo "Setting up agent for $REGION_KEY region..."
   ECR_REPO_NAME=$(echo $TF_OUTPUT_JSON | jq -r .$REGION_KEY.value.ecr_repo_name)
   ECR_REPO_URL=$(echo $TF_OUTPUT_JSON | jq -r .$REGION_KEY.value.ecr_repo_url)
