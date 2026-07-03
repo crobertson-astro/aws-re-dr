@@ -59,7 +59,12 @@ To redirect the deployment to the failover region, set `cluster_is_failed_over =
 flowchart TB
     subgraph Astro["Astro Control Plane"]
         subgraph Cluster["Astro DR Cluster"]
-            Deployment["Astro Deployment"]
+            subgraph PR["Primary Region"]
+                PDeployment["Astro Deployment"]
+            end
+            subgraph FR["Failover Region"]
+                FDeployment["Astro Deployment<br/>(failed over)"]
+            end
         end
     end
 
@@ -67,8 +72,7 @@ flowchart TB
         IAM["IAM resources"]
     end
 
-    subgraph RE["Remote Execution Resources"]
-        direction LR
+    subgraph RE["Regional AWS"]
         subgraph Primary["Primary Region"]
             PVPC["VPC + subnets"]
             PEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
@@ -85,4 +89,6 @@ flowchart TB
             FSM["Secrets Manager<br/>connections · variables · git"]
         end
     end
+    PDeployment --- Primary
+    FDeployment --- Failover
 ```
