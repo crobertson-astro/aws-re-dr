@@ -63,7 +63,7 @@ flowchart TB
                 PDeployment["Astro Deployment"]
             end
             subgraph FR["Failover Region"]
-                FDeployment["Astro Deployment<br/>(failed over)"]
+                FDeployment["Astro Deployment<br/>(if failed over)"]
             end
         end
     end
@@ -75,18 +75,18 @@ flowchart TB
     subgraph RE["Regional AWS"]
         subgraph Primary["Primary Region"]
             PVPC["VPC + subnets"]
-            PEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
+            PEKS["EKS<br/>DAG Processor + Worker + Triggerer"]
             PS3["S3<br/>task logs + XCom"]
             PECR["ECR<br/>agent image"]
-            PSM["Secrets Manager<br/>connections · variables · git"]
+            PSM["Secrets Manager<br/>connections + variables + git"]
         end
 
         subgraph Failover["Failover Region"]
             FVPC["VPC + subnets"]
-            FEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
+            FEKS["EKS<br/>DAG Processor + Worker + Triggerer<br/>(if failed over)"]
             FS3["S3<br/>task logs + XCom"]
             FECR["ECR<br/>agent image"]
-            FSM["Secrets Manager<br/>connections · variables · git"]
+            FSM["Secrets Manager<br/>connections + variables + git"]
         end
     end
     PDeployment --- Primary
