@@ -65,7 +65,7 @@ resource "astro_deployment" "this" {
   remote_execution = {
     enabled                   = true
     allowed_ip_address_ranges = []
-    task_log_bucket           = var.cluster_is_failed_over ? module.aws.failover.s3_bucket_name : module.aws.primary.s3_bucket_name
+    # task_log_bucket           = var.cluster_is_failed_over ? module.aws.failover.s3_bucket_name : module.aws.primary.s3_bucket_name
   }
 }
 
