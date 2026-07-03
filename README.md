@@ -52,3 +52,43 @@ Then follow [infra/README.md](infra/README.md) from Step 4 for each region — b
 ## Failing over
 
 To redirect the deployment to the failover region, set `cluster_is_failed_over = true` in [infra/terraform.tfvars](infra/terraform.tfvars) and re-apply. The Astro deployment's task-log bucket switches to the failover region's S3 bucket; the failover region's agent picks up task execution.
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Astro["Astro Control Plane"]
+        subgraph Cluster["Astro DR Cluster"]
+            subgraph PR["Primary Region"]
+                PDeployment["Astro Deployment"]
+            end
+            subgraph FR["Failover Region"]
+                FDeployment["Astro Deployment<br/>(if failed over)"]
+            end
+        end
+    end
+
+    subgraph Global["Global AWS"]
+        IAM["IAM resources"]
+    end
+
+    subgraph RE["Regional AWS"]
+        subgraph Primary["Primary Region"]
+            PVPC["VPC + subnets"]
+            PEKS["EKS<br/>DAG Processor + Worker + Triggerer"]
+            PS3["S3<br/>task logs + XCom"]
+            PECR["ECR<br/>agent image"]
+            PSM["Secrets Manager<br/>connections + variables + git"]
+        end
+
+        subgraph Failover["Failover Region"]
+            FVPC["VPC + subnets"]
+            FEKS["EKS<br/>DAG Processor + Worker + Triggerer<br/>(if failed over)"]
+            FS3["S3<br/>task logs + XCom"]
+            FECR["ECR<br/>agent image"]
+            FSM["Secrets Manager<br/>connections + variables + git"]
+        end
+    end
+    PDeployment --- Primary
+    FDeployment --- Failover
+```
