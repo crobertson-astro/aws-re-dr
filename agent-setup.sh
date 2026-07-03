@@ -91,8 +91,6 @@ for REGION_KEY in failover primary; do
     --set commonEnv[4].value=$REGION \
     --set commonEnv[5].name=AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH \
     --set commonEnv[5].value=s3://$S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID/xcom \
-    --set commonEnv[6].name=AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER \
-    --set commonEnv[6].value=s3://$S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID \
     --set annotations."eks\.amazonaws\.com/role-arn"="$AGENT_IAM_ROLE_ARN" \
     --set openLineage.namespace=$ASTRO_DEPLOYMENT_NAMESPACE \
     --set openLineage.endpoint="/api/v1/lineage?ASTRO_DEPLOYMENT_ID=$ASTRO_DEPLOYMENT_ID&ASTRO_DEPLOYMENT_NAMESPACE=$ASTRO_DEPLOYMENT_NAMESPACE&ASTRO_ORGANIZATION_ID=$ASTRO_ORGANIZATION_ID&ASTRO_WORKSPACE_ID=$ASTRO_WORKSPACE_ID" \

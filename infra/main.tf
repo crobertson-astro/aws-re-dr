@@ -58,16 +58,6 @@ resource "astro_deployment" "this" {
       is_secret = false
       key       = "OPENLINEAGE_DISABLED"
       value     = "False"
-    },
-    {
-      is_secret = false
-      key       = "AIRFLOW__LOGGING__REMOTE_LOGGING"
-      value     = "True"
-    },
-    {
-      is_secret = false
-      key       = "AIRFLOW__SECRETS__BACKEND_KWARGS"
-      value     = "{\"connections_prefix\": \"airflow/connections\", \"variables_prefix\": \"airflow/variables\", \"role_arn\": \"${module.aws.agent_iam_role_arn}\"}"
     }
   ]
 
