@@ -8,3 +8,5 @@ kubectl scale deployment --all --replicas=1
 kubectl config use-context failover
 echo "Scaling down failover deployments..."
 kubectl scale deployment --all --replicas=0
+
+kubectl config use-context primary
