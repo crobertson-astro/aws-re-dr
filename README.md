@@ -56,47 +56,68 @@ To redirect the deployment to the failover region, set `cluster_is_failed_over =
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph Astro["Astro Control Plane"]
+        direction LR
         Cluster["Astro Cluster<br/>is_dr_enabled = true"]
         Deployment["Astro Deployment<br/>task-log bucket + IAM role<br/>swap on cluster_is_failed_over"]
         Cluster --- Deployment
     end
 
     subgraph Global["Global AWS (shared)"]
-        AgentRole["Agent IAM Role<br/>(IRSA, trusted by both OIDC providers)"]
-        OrchRole["Orchestration Plane IAM Role<br/>(remote logging)"]
-        DevRole["Development IAM Role<br/>(GitHub OIDC)"]
+        direction LR
+        AgentRole["Agent IAM Role<br/>IRSA, both OIDC providers"]
+        OrchRole["Orchestration Plane IAM Role<br/>remote logging"]
+        DevRole["Development IAM Role<br/>GitHub OIDC"]
     end
 
-    subgraph Primary["Primary Region"]
-        PVPC["VPC + subnets"]
-        PEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
-        PS3["S3<br/>task logs + XCom"]
-        PECR["ECR<br/>agent image"]
-        PSM["Secrets Manager<br/>connections · variables · git"]
-        PVPC --- PEKS
-        PEKS --- PS3
-        PEKS --- PECR
-        PEKS --- PSM
+    subgraph Regions[" "]
+        direction LR
+        subgraph Primary["Primary Region"]
+            PVPC["VPC + subnets"]
+            PEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
+            PS3["S3<br/>task logs + XCom"]
+            PECR["ECR<br/>agent image"]
+            PSM["Secrets Manager<br/>connections · variables · git"]
+            PVPC --- PEKS
+            PEKS --- PS3
+            PEKS --- PECR
+            PEKS --- PSM
+        end
+
+        subgraph Failover["Failover Region"]
+            FVPC["VPC + subnets"]
+            FEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
+            FS3["S3<br/>task logs + XCom"]
+            FECR["ECR<br/>agent image"]
+            FSM["Secrets Manager<br/>connections · variables · git"]
+            FVPC --- FEKS
+            FEKS --- FS3
+            FEKS --- FECR
+            FEKS --- FSM
+        end
     end
 
-    subgraph Failover["Failover Region"]
-        FVPC["VPC + subnets"]
-        FEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
-        FS3["S3<br/>task logs + XCom"]
-        FECR["ECR<br/>agent image"]
-        FSM["Secrets Manager<br/>connections · variables · git"]
-        FVPC --- FEKS
-        FEKS --- FS3
-        FEKS --- FECR
-        FEKS --- FSM
-    end
-
-    Deployment -. "active region<br/>(flips on failover)" .-> PEKS
+    Deployment -. "active<br/>(flips on failover)" .-> PEKS
     Deployment -. "standby" .-> FEKS
     AgentRole --- PEKS
     AgentRole --- FEKS
     OrchRole --- PS3
     OrchRole --- FS3
+
+    classDef shared fill:#f5f5f5,stroke:#666,stroke-width:1px,color:#111
+    classDef primary fill:#eef2f7,stroke:#4b6584,stroke-width:1px,color:#111
+    classDef failover fill:#fafafa,stroke:#8a8a8a,stroke-width:1px,stroke-dasharray:4 3,color:#111
+    classDef groupShared fill:#fafafa,stroke:#666,stroke-width:1px,color:#111
+    classDef groupPrimary fill:#f4f7fb,stroke:#4b6584,stroke-width:1px,color:#111
+    classDef groupFailover fill:#fbfbfb,stroke:#8a8a8a,stroke-width:1px,stroke-dasharray:4 3,color:#111
+    classDef invisible fill:none,stroke:none
+
+    class Cluster,Deployment,AgentRole,OrchRole,DevRole shared
+    class PVPC,PEKS,PS3,PECR,PSM primary
+    class FVPC,FEKS,FS3,FECR,FSM failover
+    class Astro,Global groupShared
+    class Primary groupPrimary
+    class Failover groupFailover
+    class Regions invisible
 ```
