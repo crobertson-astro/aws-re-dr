@@ -74,6 +74,7 @@ for REGION_KEY in failover primary; do
   helm uninstall astro-agent -n default --ignore-not-found
   helm install astro-agent astronomer/astro-remote-execution-agent \
     -n default -f values.yaml \
+    --set resourceNamePrefix=$REGION_KEY \
     --set astroDeploymentAPIURL=$ASTRO_DEPLOYMENT_API_URL \
     --set image=$ECR_REPO_URL:$IMAGE_TAG \
     --set imagePullSecretName=image-pull-secret \
@@ -95,13 +96,17 @@ for REGION_KEY in failover primary; do
     --set annotations."eks\.amazonaws\.com/role-arn"="$AGENT_IAM_ROLE_ARN" \
     --set openLineage.namespace=$ASTRO_DEPLOYMENT_NAMESPACE \
     --set openLineage.endpoint="/api/v1/lineage?ASTRO_DEPLOYMENT_ID=$ASTRO_DEPLOYMENT_ID&ASTRO_DEPLOYMENT_NAMESPACE=$ASTRO_DEPLOYMENT_NAMESPACE&ASTRO_ORGANIZATION_ID=$ASTRO_ORGANIZATION_ID&ASTRO_WORKSPACE_ID=$ASTRO_WORKSPACE_ID" \
-    --set openLineage.apiKeySecret=deployment-api-token \
-    --set workers[0].queues=default-$REGION_KEY
+    --set openLineage.apiKeySecret=deployment-api-token
 
   echo "$REGION_KEY: Deployment complete."
 done
 
 # to upgrade: helm upgrade ...
+
+echo "Scaling down failover deployments..."
+kubectl config use-context failover
+kubectl scale deployment --all --replicas=0
+kubectl config use-context primary
 
 echo "Verify with 'kubectl get pods -n default'."
 echo "Inspect logs with 'kubectl logs <pod-name> -n default --tail=100'."
