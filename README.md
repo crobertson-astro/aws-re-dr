@@ -52,3 +52,51 @@ Then follow [infra/README.md](infra/README.md) from Step 4 for each region — b
 ## Failing over
 
 To redirect the deployment to the failover region, set `cluster_is_failed_over = true` in [infra/terraform.tfvars](infra/terraform.tfvars) and re-apply. The Astro deployment's task-log bucket switches to the failover region's S3 bucket; the failover region's agent picks up task execution.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Astro["Astro Control Plane"]
+        Cluster["Astro Cluster<br/>is_dr_enabled = true"]
+        Deployment["Astro Deployment<br/>task-log bucket + IAM role<br/>swap on cluster_is_failed_over"]
+        Cluster --- Deployment
+    end
+
+    subgraph Global["Global AWS (shared)"]
+        AgentRole["Agent IAM Role<br/>(IRSA, trusted by both OIDC providers)"]
+        OrchRole["Orchestration Plane IAM Role<br/>(remote logging)"]
+        DevRole["Development IAM Role<br/>(GitHub OIDC)"]
+    end
+
+    subgraph Primary["Primary Region"]
+        PVPC["VPC + subnets"]
+        PEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
+        PS3["S3<br/>task logs + XCom"]
+        PECR["ECR<br/>agent image"]
+        PSM["Secrets Manager<br/>connections · variables · git"]
+        PVPC --- PEKS
+        PEKS --- PS3
+        PEKS --- PECR
+        PEKS --- PSM
+    end
+
+    subgraph Failover["Failover Region"]
+        FVPC["VPC + subnets"]
+        FEKS["EKS<br/>DAG Processor · Worker · Triggerer"]
+        FS3["S3<br/>task logs + XCom"]
+        FECR["ECR<br/>agent image"]
+        FSM["Secrets Manager<br/>connections · variables · git"]
+        FVPC --- FEKS
+        FEKS --- FS3
+        FEKS --- FECR
+        FEKS --- FSM
+    end
+
+    Deployment -. "active region<br/>(flips on failover)" .-> PEKS
+    Deployment -. "standby" .-> FEKS
+    AgentRole --- PEKS
+    AgentRole --- FEKS
+    OrchRole --- PS3
+    OrchRole --- FS3
+```
