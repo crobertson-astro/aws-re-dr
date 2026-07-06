@@ -14,8 +14,18 @@ owner           = "<your-team-name>"        // e.g. "Data Engineering"
 // -----------------------------------------------------------------------------
 astro_organization_id = "<your-astro-organization-id>"
 workspace_id          = "<your-astro-workspace-id>"
-cluster_name          = "<your-cluster-name>"     // e.g. "aws-re-dr-cluster"
 deployment_name       = "<your-deployment-name>"  // e.g. "aws-re-dr-deployment"
+
+// Astro cluster — pick ONE of the two options below:
+//
+// Option A (default): let Terraform create a new DR-enabled Astro cluster.
+// Set cluster_name and leave existing_cluster_id unset.
+cluster_name = "<your-cluster-name>"  // e.g. "aws-re-dr-cluster"
+//
+// Option B (bring-your-own-cluster): attach the deployment to a pre-existing
+// Astro cluster. Set existing_cluster_id and comment out cluster_name above.
+// The other cluster_* variables below are ignored in this mode.
+# existing_cluster_id = "<your-existing-astro-cluster-id>"
 
 // -----------------------------------------------------------------------------
 // Optional — override here if needed

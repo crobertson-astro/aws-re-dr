@@ -6,7 +6,7 @@ This template deploys the infrastructure and configuration needed to run [Astro 
 
 Global (created once, shared by both regions):
 
-- **Astro cluster** with `is_dr_enabled = true` — primary in `primary_region`, DR replica in `failover_region`
+- **Astro cluster** with `is_dr_enabled = true` — primary in `primary_region`, DR replica in `failover_region`. Optional: set `existing_cluster_id` to bring your own cluster instead of creating one.
 - **Astro deployment** — task-log bucket and workload-identity role swap when `cluster_is_failed_over` flips
 - **IAM roles** — development (GitHub OIDC), agent (IRSA, trusted by both EKS OIDC providers), Astro orchestration plane (remote logging)
 
@@ -64,7 +64,8 @@ cp terraform.tfvars.example terraform.tfvars
 | `owner` | Owner or team responsible for resources | Yes |
 | `astro_organization_id` | Astro organization ID | Yes |
 | `workspace_id` | Astro workspace ID for the cluster and deployment | Yes |
-| `cluster_name` | Name of the Astro cluster | Yes |
+| `cluster_name` | Name of the Astro cluster to create. Ignored when `existing_cluster_id` is set. | Yes (unless BYO cluster) |
+| `existing_cluster_id` | Bring-your-own-cluster: ID of a pre-existing Astro cluster. When set, no cluster is created and the other `cluster_*` variables are ignored. | No |
 | `deployment_name` | Name of the Astro deployment | Yes |
 | `git_branch` | Git branch to track for DAG bundles | Yes |
 | `dag_subdir` | Subdirectory within the repo containing DAG files | Yes |

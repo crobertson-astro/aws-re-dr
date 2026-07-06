@@ -88,9 +88,16 @@ variable "workspace_id" {
   type        = string
 }
 
-variable "cluster_name" {
-  description = "Name of the Astro cluster"
+variable "existing_cluster_id" {
+  description = "Bring-your-own-cluster: ID of a pre-existing Astro cluster. When set, no astro_cluster resource is created and the cluster_* variables below are ignored."
   type        = string
+  default     = null
+}
+
+variable "cluster_name" {
+  description = "Name of the Astro cluster. Ignored when existing_cluster_id is set."
+  type        = string
+  default     = null
 }
 
 variable "cluster_vpc_subnet_range" {

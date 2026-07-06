@@ -47,7 +47,7 @@ output "astro_workspace_id" {
 }
 
 output "astro_cluster_id" {
-  value = astro_cluster.this.id
+  value = local.astro_cluster_id
 }
 
 output "astro_deployment_id" {

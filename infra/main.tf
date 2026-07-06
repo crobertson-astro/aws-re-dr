@@ -20,6 +20,8 @@ module "aws" {
 }
 
 resource "astro_cluster" "this" {
+  count = var.existing_cluster_id == null ? 1 : 0
+
   name             = var.cluster_name
   type             = "DEDICATED"
   cloud_provider   = "AWS"
@@ -39,11 +41,15 @@ resource "astro_cluster" "this" {
   is_failed_over                  = var.cluster_is_failed_over
 }
 
+locals {
+  astro_cluster_id = var.existing_cluster_id != null ? var.existing_cluster_id : astro_cluster.this[0].id
+}
+
 resource "astro_deployment" "this" {
   name         = var.deployment_name
   description  = "Remote execution deployment with cross-region failover"
   type         = "DEDICATED"
-  cluster_id   = astro_cluster.this.id
+  cluster_id   = local.astro_cluster_id
   workspace_id = var.workspace_id
   executor     = "ASTRO"
 
