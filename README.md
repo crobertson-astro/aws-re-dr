@@ -1,7 +1,7 @@
 # Astro Remote Execution — Cross-Region Disaster Recovery on AWS
 
 This project deploys an [Astro Remote Execution](https://www.astronomer.io/docs/astro/remote-execution-overview) agent across two AWS regions for cross-region disaster recovery.
-A single Terraform apply provisions per-region AWS infrastructure (VPC, EKS, S3, ECR, Secrets Manager) in both a primary and failover region, plus an Astro [cluster](https://cloud.astronomer.io/settings/clusters/cmqzgljvy857s01ny14w7jgpj) with DR enabled and an Astro [deployment](https://cloud.astronomer.io/cm7f419mg0no001jhunzjeer1/deployments/cmqzimj5p876501nyl7x8pktw) backed by both regions.
+A single Terraform apply provisions per-region AWS infrastructure (VPC, EKS, S3, ECR, Secrets Manager) in both a primary and failover region, plus a DR-enabled Astro cluster and an Astro deployment backed by both regions.
 The Astro cluster can either be created by Terraform or brought in — set `existing_cluster_id` in `terraform.tfvars` to attach the deployment to a pre-existing cluster instead.
 Flipping `cluster_is_failed_over` in `terraform.tfvars` redirects deployment infrastructure, DAG execution, and task-log storage to the failover region.
 
@@ -37,12 +37,20 @@ astro login
 
 ## Deploying
 
-1. Apply the Terraform. From [infra/](infra/), copy `terraform.tfvars.example` as `terraform.tfvars` (gitignored) and populate with your details, then:
+1. Apply the Terraform. From [infra/](infra/):
 
     ```bash
-    terraform init
+    # Configure your Terraform state backend (S3)
+    cp backend.hcl.example backend.hcl   # then edit backend.hcl with your bucket/region
+
+    # Configure your deployment variables
+    cp terraform.tfvars.example terraform.tfvars   # then edit terraform.tfvars
+
+    terraform init -backend-config=backend.hcl
     terraform apply
     ```
+
+    Both `backend.hcl` and `terraform.tfvars` are gitignored.
 
     Per-region outputs are namespaced under `primary` and `failover` (e.g. `terraform output -json primary | jq -r .value.ecr_repo_url`). Global IAM role ARNs, Astro IDs, and agent/deployment tokens are top-level outputs. See [infra/README.md](infra/README.md) for the full variable reference.
 

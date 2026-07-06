@@ -5,6 +5,9 @@ aws_profile     = "<your-aws-sso-profile>"  // e.g. "my-company-dev"
 aws_account_id  = "<your-aws-account-id>"   // e.g. "123456789012"
 primary_region  = "us-west-2"               // active region
 failover_region = "us-west-1"               // DR replica region
+// NOTE: If you change failover_region, you must ALSO update the hardcoded
+// `dr_region` in infra/main.tf (astro_cluster.this). The astro provider
+// rejects variable references there — see the comment in main.tf for context.
 project_name    = "<your-project-name>"     // e.g. "astro-re"
 environment     = "<your-environment>"      // e.g. "dev"
 owner           = "<your-team-name>"        // e.g. "Data Engineering"

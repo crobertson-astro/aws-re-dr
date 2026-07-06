@@ -1,0 +1,10 @@
+# Terraform S3 backend config. Copy this file to backend.hcl (gitignored) and
+# fill in your own values, then run:
+#
+#   terraform init -backend-config=backend.hcl
+#
+bucket       = "<your-tf-state-bucket>"
+key          = "aws-re-dr/infra/terraform.tfstate"
+region       = "<your-tf-state-bucket-region>"
+encrypt      = true
+use_lockfile = true

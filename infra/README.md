@@ -44,14 +44,15 @@ export AWS_PROFILE=<your-profile-name>
 
 ## Step 2: Customize and apply Terraform
 
-Copy the example file and fill in your values:
+Copy the example files and fill in your values:
 
 ```bash
 cd infra
+cp backend.hcl.example backend.hcl        # edit with your S3 state bucket / region
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-`terraform.tfvars` is gitignored — your credentials will never be committed. Edit it with your environment values:
+Both `backend.hcl` and `terraform.tfvars` are gitignored — your credentials will never be committed. Edit `terraform.tfvars` with your environment values:
 
 | Variable | Description | Required |
 |---|---|---|
@@ -81,7 +82,7 @@ cp terraform.tfvars.example terraform.tfvars
 Apply the Terraform:
 
 ```bash
-terraform init
+terraform init -backend-config=backend.hcl
 terraform validate
 terraform plan -out tfplan
 terraform apply tfplan

@@ -10,11 +10,8 @@ terraform {
       version = "~> 1.0"
     }
   }
-  backend "s3" {
-    bucket       = "astro-chase"
-    key          = "aws-re-dr/infra/terraform.tfstate"
-    region       = "us-west-2"
-    encrypt      = true
-    use_lockfile = true
-  }
+  # Partial backend config. Copy backend.hcl.example to backend.hcl, fill in
+  # your own S3 bucket / key / region, then run:
+  #   terraform init -backend-config=backend.hcl
+  backend "s3" {}
 }
