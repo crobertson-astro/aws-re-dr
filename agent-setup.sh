@@ -17,7 +17,7 @@ AGENT_TOKEN=$(echo $TF_OUTPUT_JSON | jq -r .astro_agent_token.value)
 AGENT_IAM_ROLE_ARN=$(echo $TF_OUTPUT_JSON | jq -r .agent_iam_role_arn.value)
 DEPLOYMENT_ADMIN_TOKEN=$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_admin_token.value)
 
-ASTRO_DEPLOYMENT_API_URL=https://$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_webserver_ingress_hostname.value | sed 's/.astronomer.run/.external.astronomer.run/')
+ASTRO_DEPLOYMENT_API_URL=$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_remote_exec_api_url.value)
 ASTRO_ORGANIZATION_ID=$(echo $TF_OUTPUT_JSON | jq -r .astro_organization_id.value)
 ASTRO_WORKSPACE_ID=$(echo $TF_OUTPUT_JSON | jq -r .astro_workspace_id.value)
 ASTRO_DEPLOYMENT_ID=$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_id.value)

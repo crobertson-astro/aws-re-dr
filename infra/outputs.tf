@@ -54,6 +54,10 @@ output "astro_deployment_id" {
   value = astro_deployment.this.id
 }
 
+output "astro_deployment_remote_exec_api_url" {
+  value = "https://${local.astro_cluster_id}.external.astronomer.run/d${substr(astro_deployment.this.id, -7, 7)}"
+}
+
 output "astro_deployment_webserver_ingress_hostname" {
   value = astro_deployment.this.webserver_ingress_hostname
 }
