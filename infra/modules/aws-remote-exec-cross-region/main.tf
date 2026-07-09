@@ -9,6 +9,7 @@ module "primary" {
   vpc_cidr             = var.vpc_cidr
   az_count             = var.az_count
   development_role_arn = aws_iam_role.development_role.arn
+  agent_role_arn       = aws_iam_role.agent_role.arn
 
   git_repo_url = var.git_repo_url
   git_username = var.git_username
@@ -28,6 +29,7 @@ module "failover" {
   vpc_cidr             = var.vpc_cidr
   az_count             = var.az_count
   development_role_arn = aws_iam_role.development_role.arn
+  agent_role_arn       = aws_iam_role.agent_role.arn
 
   git_repo_url = var.git_repo_url
   git_username = var.git_username

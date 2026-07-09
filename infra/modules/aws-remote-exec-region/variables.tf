@@ -35,6 +35,11 @@ variable "development_role_arn" {
   type        = string
 }
 
+variable "agent_role_arn" {
+  description = "ARN of the global IAM role granted access to S3 and Secrets Manager in this region"
+  type        = string
+}
+
 variable "git_repo_url" {
   description = "Full HTTPS URL of the Git repository containing your DAGs. Leave null to skip GitDagBundle setup."
   type        = string

@@ -51,7 +51,12 @@ output "helm_airflow_conn_git_repo" {
   value       = var.git_repo_url != null ? "{\"conn_type\": \"git\", \"login\": \"${var.git_username}\", \"password\": \"${var.git_pat}\", \"host\": \"${var.git_repo_url}\", \"schema\": \"https\", \"extra\": {\"branch\": \"${var.git_branch}\"}}" : null
 }
 
-output "secrets_manager_backend_kwargs" {
+output "secrets_backend_kwargs" {
   description = "Use this value for AIRFLOW__SECRETS__BACKEND_KWARGS in commonEnv in your values.yaml."
-  value       = "{\"connections_prefix\": \"${local.secret_prefix}/connections\", \"variables_prefix\": \"${local.secret_prefix}/variables\", \"region_name\": \"${local.region}\"}"
+  value = jsonencode({
+    connections_prefix = "${local.secret_prefix}/connections"
+    variables_prefix   = "${local.secret_prefix}/variables"
+    region_name        = local.region
+    role_arn           = var.agent_role_arn
+  })
 }
