@@ -72,9 +72,9 @@ Both `backend.hcl` and `terraform.tfvars` are gitignored — your credentials wi
 | `dag_subdir` | Subdirectory within the repo containing DAG files | Yes |
 | `vpc_cidr` | CIDR block for each regional VPC, /24 minimum | No (default: `10.0.0.0/24`) |
 | `az_count` | Number of Availability Zones per region | No (default: `2`) |
-| `git_repo_url` | Full HTTPS URL of your DAG repo. Leave unset to skip GitDagBundle setup. | No |
-| `git_username` | GitHub username associated with the PAT. Required if `git_repo_url` is set. | No |
-| `git_pat` | GitHub PAT with **Contents: Read-only** permission. Required if `git_repo_url` is set. | No |
+| `git_repo_url` | Legacy Terraform-managed Git connection URL. Not required for the default env-var GitDagBundle setup in `agent-setup.sh`. | No |
+| `git_username` | Legacy Terraform-managed Git connection username. Use `GIT_USERNAME` for `agent-setup.sh` instead. | No |
+| `git_pat` | Legacy Terraform-managed Git connection token. Use `GIT_PAT` for `agent-setup.sh` instead. | No |
 | `cluster_is_failed_over` | Set to `true` to fail the Astro cluster over to the DR region | No (default: `false`) |
 
 > **Note:** AWS NAT Gateway quota is per-region (default 5). Confirm capacity in both `primary_region` and `failover_region`.
@@ -214,18 +214,28 @@ The repo's [values.yaml](../values.yaml) is the working chart configuration. Mos
 | `commonEnv.ASTRO_*` taskLogBucket / agentIamRoleArn | `<region>.s3_bucket_name`, `agent_iam_role_arn` |
 | `serviceAccount.annotations."eks.amazonaws.com/role-arn"` | `agent_iam_role_arn` (same role in both regions) |
 
-### GitDagBundle (optional)
+### GitDagBundle
 
-If you set `git_repo_url` in Step 2, Terraform creates per-region Git connection secrets in Secrets Manager and outputs the helper values:
+The default Helm configuration uses `GitDagBundle` to load DAGs from this repo's `astro/dags` directory. `agent-setup.sh` derives the repo URL from `git remote get-url origin` and pins `tracking_ref` to the current commit SHA from `git rev-parse --verify HEAD` when it installs the chart.
 
-- Set `dagBundleConfigList` using `terraform output -raw primary.helm_dag_bundle_config` (and the failover equivalent)
-- Add `AIRFLOW_CONN_GIT_REPO` to `commonEnv` using `terraform output -raw primary_helm_airflow_conn_git_repo` (and `failover_helm_airflow_conn_git_repo`)
+For the Git connection, the setup script injects `AIRFLOW_CONN_GIT_REPO` as a Helm env var instead of requiring a Secrets Manager connection. For a public repo, no extra configuration is needed. For a private repo, export both variables before running `agent-setup.sh`:
 
-If you skipped `git_repo_url`, leave `dagBundleConfigList` as `LocalDagBundle`. You can switch to `GitDagBundle` later by setting the git variables and re-running `terraform apply`.
+```bash
+export GIT_USERNAME=<github-username-or-service-account>
+export GIT_PAT=<github-token-with-read-access>
+bash agent-setup.sh
+```
 
-> ⚠️ **Do NOT include `repo_url` in `dagBundleConfigList` kwargs.** Including it prevents the `GitHook` from being instantiated, which means credentials are never applied and the clone will fail with `could not read Username`. The repo URL comes from the git connection stored in Secrets Manager by Terraform.
+You can override the Git bundle source without changing Terraform:
 
-> ⚠️ **The `host` field in `AIRFLOW_CONN_GIT_REPO` must be the full HTTPS repo URL** (e.g. `https://github.com/your-org/your-repo.git`), not just `github.com`. The `GitHook` uses `connection.host` directly as the clone URL.
+```bash
+GIT_BUNDLE_REPO_URL=https://github.com/your-org/your-repo.git \
+GIT_BUNDLE_TRACKING_REF=main \
+GIT_BUNDLE_SUBDIR=astro/dags \
+bash agent-setup.sh
+```
+
+> ⚠️ **The `host` field in `AIRFLOW_CONN_GIT_REPO` must be the full repo URL** (e.g. `https://github.com/your-org/your-repo.git`), not just `github.com`. The `GitHook` uses `connection.host` directly as the clone URL.
 
 See [Configure DAG sources](https://www.astronomer.io/docs/astro/remote-execution-configure-dag-sources) for full documentation.
 

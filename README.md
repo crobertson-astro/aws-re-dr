@@ -7,12 +7,12 @@ Flipping `cluster_is_failed_over` in `terraform.tfvars` redirects deployment inf
 
 ## Layout
 
-- [infra/](infra/) — Terraform root module. Provisions global IAM and the Astro cluster/deployment/tokens, and invokes the regional module twice. See [infra/README.md](infra/README.md) for a variable-by-variable reference and optional add-ons (GitDagBundle, OpenLineage, Datadog metrics export).
+- [infra/](infra/) — Terraform root module. Provisions global IAM and the Astro cluster/deployment/tokens, and invokes the regional module twice. See [infra/README.md](infra/README.md) for a variable-by-variable reference and optional add-ons (OpenLineage, Datadog metrics export).
   - [infra/modules/aws-remote-exec-cross-region/](infra/modules/aws-remote-exec-cross-region/) — wraps both regional invocations and creates the IAM roles shared across regions (development, agent IRSA, Astro orchestration plane).
   - [infra/modules/aws-remote-exec-region/](infra/modules/aws-remote-exec-region/) — per-region resources: VPC, EKS, S3, ECR, Secrets Manager.
 - [astro/](astro/) — Astro project (DAGs, Dockerfile, requirements). Built and pushed to each region's ECR by [agent-setup.sh](agent-setup.sh).
 - [values.yaml](values.yaml) — Helm values for the `astro-remote-execution-agent` chart. Used for both regional Helm installs; region-specific fields (image tag, S3 bucket, ECR repo, IAM role) are injected on the `helm install` command line by [agent-setup.sh](agent-setup.sh).
-- [agent-setup.sh](agent-setup.sh) — End-to-end agent bootstrap. Reads `terraform output`, builds and pushes the agent image to each region's ECR, wires kubeconfig contexts (`primary`, `failover`), creates Kubernetes secrets, installs the Helm chart in both regions, and scales the failover region's deployments to zero so it sits warm-standby.
+- [agent-setup.sh](agent-setup.sh) — End-to-end agent bootstrap. Reads `terraform output`, builds and pushes the agent image to each region's ECR, wires kubeconfig contexts (`primary`, `failover`), configures GitDagBundle for this repo's `astro/dags` folder, creates Kubernetes secrets, installs the Helm chart in both regions, and scales the failover region's deployments to zero so it sits warm-standby.
 - [failover.sh](failover.sh) — Fails over from primary to failover: scales failover agent deployments up to 1, then drains and scales the primary agent deployments to 0. Leaves kubectl on the `failover` context.
 - [fallback-to-primary.sh](fallback-to-primary.sh) — Reverse of `failover.sh`: scales primary back up to 1, drains and scales failover down to 0, and leaves kubectl on the `primary` context.
 

@@ -9,7 +9,7 @@ imagePullSecretName: ~
 agentTokenSecretName: ~
 secretBackend: airflow.providers.amazon.aws.secrets.secrets_manager.SecretsManagerBackend
 xcomBackend: airflow.providers.common.io.xcom.backend.XComObjectStorageBackend
-dagBundleConfigList: '[{"name": "dags-folder", "classpath": "airflow.dag_processing.bundles.local.LocalDagBundle", "kwargs": {}}]'
+dagBundleConfigList: '[{"name": "repo-dags", "classpath": "airflow.providers.git.bundles.git.GitDagBundle", "kwargs": {"repo_url": "https://github.com/crobertson-astro/aws-re-dr.git", "tracking_ref": "main", "subdir": "astro/dags"}}]'
 commonEnv:
   - name: ASTRO_ORGANIZATION_ID
     value: ~

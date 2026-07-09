@@ -23,6 +23,55 @@ ASTRO_WORKSPACE_ID=$(echo $TF_OUTPUT_JSON | jq -r .astro_workspace_id.value)
 ASTRO_DEPLOYMENT_ID=$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_id.value)
 ASTRO_DEPLOYMENT_NAMESPACE=$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_namespace.value)
 
+GIT_BUNDLE_REPO_URL=${GIT_BUNDLE_REPO_URL:-$(git remote get-url origin)}
+GIT_BUNDLE_TRACKING_REF=${GIT_BUNDLE_TRACKING_REF:-$(git rev-parse --verify HEAD)}
+GIT_BUNDLE_SUBDIR=${GIT_BUNDLE_SUBDIR:-astro/dags}
+HELM_GIT_CONNECTION_ARGS=()
+
+if [[ -n "${GIT_USERNAME:-}" || -n "${GIT_PAT:-}" ]]; then
+  if [[ -z "${GIT_USERNAME:-}" || -z "${GIT_PAT:-}" ]]; then
+    echo "Error: Set both GIT_USERNAME and GIT_PAT, or leave both unset for a public repository."
+    exit 1
+  fi
+
+  GIT_CONN_HOST=${GIT_BUNDLE_REPO_URL#https://}
+  GIT_CONN_HOST=${GIT_CONN_HOST#http://}
+  GIT_CONN_REPO=${GIT_CONN_HOST#*/}
+  GIT_CONN_HOST=${GIT_CONN_HOST%%/*}
+  GIT_CONN_REPO=${GIT_CONN_REPO%.git}
+
+  AIRFLOW_CONN_GIT_REPO=$(jq -cn \
+    --arg login "$GIT_USERNAME" \
+    --arg password "$GIT_PAT" \
+    --arg host "$GIT_CONN_HOST" \
+    --arg repo "$GIT_CONN_REPO" \
+    --arg branch "$GIT_BUNDLE_TRACKING_REF" \
+    '{conn_type: "git", login: $login, password: $password, host: $host, schema: "https", extra: {repo: $repo, branch: $branch}}')
+  AIRFLOW_CONN_GIT_REPO_FILE=$(mktemp)
+  chmod 600 "$AIRFLOW_CONN_GIT_REPO_FILE"
+  printf '%s' "$AIRFLOW_CONN_GIT_REPO" > "$AIRFLOW_CONN_GIT_REPO_FILE"
+  HELM_GIT_CONNECTION_ARGS=(
+    --set commonEnv[8].name=AIRFLOW_CONN_GIT_REPO
+    --set-file commonEnv[8].value="$AIRFLOW_CONN_GIT_REPO_FILE"
+  )
+  DAG_BUNDLE_CONFIG=$(jq -cn \
+    --arg repo_url "$GIT_BUNDLE_REPO_URL" \
+    --arg tracking_ref "$GIT_BUNDLE_TRACKING_REF" \
+    --arg subdir "$GIT_BUNDLE_SUBDIR" \
+    '[{"name": "repo-dags", "classpath": "airflow.providers.git.bundles.git.GitDagBundle", "kwargs": {"repo_url": $repo_url, "tracking_ref": $tracking_ref, "subdir": $subdir, "git_conn_id": "git_repo"}}]')
+else
+  DAG_BUNDLE_CONFIG=$(jq -cn \
+    --arg repo_url "$GIT_BUNDLE_REPO_URL" \
+    --arg tracking_ref "$GIT_BUNDLE_TRACKING_REF" \
+    --arg subdir "$GIT_BUNDLE_SUBDIR" \
+    '[{"name": "repo-dags", "classpath": "airflow.providers.git.bundles.git.GitDagBundle", "kwargs": {"repo_url": $repo_url, "tracking_ref": $tracking_ref, "subdir": $subdir}}]')
+fi
+
+DAG_BUNDLE_CONFIG_FILE=$(mktemp)
+chmod 600 "$DAG_BUNDLE_CONFIG_FILE"
+printf '%s' "$DAG_BUNDLE_CONFIG" > "$DAG_BUNDLE_CONFIG_FILE"
+trap 'rm -f "${AIRFLOW_CONN_GIT_REPO_FILE:-}" "$DAG_BUNDLE_CONFIG_FILE"' EXIT
+
 echo "Initalizing Helm..."
 helm repo add astronomer https://helm.astronomer.io
 helm repo update
@@ -91,6 +140,8 @@ for REGION_KEY in failover primary; do
     --set commonEnv[4].value=$REGION \
     --set commonEnv[5].name=AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH \
     --set commonEnv[5].value=s3://$S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID/xcom \
+    --set-file dagBundleConfigList="$DAG_BUNDLE_CONFIG_FILE" \
+    "${HELM_GIT_CONNECTION_ARGS[@]}" \
     --set annotations."eks\.amazonaws\.com/role-arn"="$AGENT_IAM_ROLE_ARN" \
     --set openLineage.namespace=$ASTRO_DEPLOYMENT_NAMESPACE \
     --set openLineage.endpoint="/api/v1/lineage?ASTRO_DEPLOYMENT_ID=$ASTRO_DEPLOYMENT_ID&ASTRO_DEPLOYMENT_NAMESPACE=$ASTRO_DEPLOYMENT_NAMESPACE&ASTRO_ORGANIZATION_ID=$ASTRO_ORGANIZATION_ID&ASTRO_WORKSPACE_ID=$ASTRO_WORKSPACE_ID" \
