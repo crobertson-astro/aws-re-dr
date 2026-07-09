@@ -24,6 +24,7 @@ ASTRO_DEPLOYMENT_ID=$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_id.value)
 ASTRO_DEPLOYMENT_NAMESPACE=$(echo $TF_OUTPUT_JSON | jq -r .astro_deployment_namespace.value)
 
 GIT_BUNDLE_REPO_URL=${GIT_BUNDLE_REPO_URL:-$(git remote get-url origin)}
+GIT_BUNDLE_TRACKING_REF=${GIT_BUNDLE_TRACKING_REF:-$(git branch --show-current)}
 GIT_BUNDLE_TRACKING_REF=${GIT_BUNDLE_TRACKING_REF:-$(git rev-parse --verify HEAD)}
 GIT_BUNDLE_SUBDIR=${GIT_BUNDLE_SUBDIR:-astro/dags}
 HELM_GIT_CONNECTION_ARGS=()

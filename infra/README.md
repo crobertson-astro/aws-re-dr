@@ -216,7 +216,7 @@ The repo's [values.yaml](../values.yaml) is the working chart configuration. Mos
 
 ### GitDagBundle
 
-The default Helm configuration uses `GitDagBundle` to load DAGs from this repo's `astro/dags` directory. `agent-setup.sh` derives the repo URL from `git remote get-url origin` and pins `tracking_ref` to the current commit SHA from `git rev-parse --verify HEAD` when it installs the chart.
+The default Helm configuration uses `GitDagBundle` to load DAGs from this repo's `astro/dags` directory. `agent-setup.sh` derives the repo URL from `git remote get-url origin` and sets `tracking_ref` to the current branch from `git branch --show-current` when it installs the chart. If the checkout is detached, it falls back to the current commit SHA.
 
 For the Git connection, the setup script injects `AIRFLOW_CONN_GIT_REPO` as a Helm env var instead of requiring a Secrets Manager connection. For a public repo, no extra configuration is needed. For a private repo, export both variables before running `agent-setup.sh`:
 
