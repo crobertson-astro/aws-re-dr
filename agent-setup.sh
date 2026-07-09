@@ -121,31 +121,38 @@ for REGION_KEY in failover primary; do
 
   echo "$REGION_KEY: Deploying Astro Remote Agent..."
   helm uninstall astro-agent -n default --ignore-not-found
-  helm install astro-agent astronomer/astro-remote-execution-agent \
-    -n default -f values.yaml \
-    --set resourceNamePrefix=$REGION_KEY \
-    --set astroDeploymentAPIURL=$ASTRO_DEPLOYMENT_API_URL \
-    --set image=$ECR_REPO_URL:$IMAGE_TAG \
-    --set imagePullSecretName=image-pull-secret \
-    --set agentTokenSecretName=agent-token \
-    --set commonEnv[0].name=ASTRO_ORGANIZATION_ID \
-    --set commonEnv[0].value=$ASTRO_ORGANIZATION_ID \
-    --set commonEnv[1].name=ASTRO_WORKSPACE_ID \
-    --set commonEnv[1].value=$ASTRO_WORKSPACE_ID \
-    --set commonEnv[2].name=ASTRO_DEPLOYMENT_ID \
-    --set commonEnv[2].value=$ASTRO_DEPLOYMENT_ID \
-    --set commonEnv[3].name=ASTRO_DEPLOYMENT_NAMESPACE \
-    --set commonEnv[3].value=$ASTRO_DEPLOYMENT_NAMESPACE \
-    --set commonEnv[4].name=AWS_REGION \
-    --set commonEnv[4].value=$REGION \
-    --set commonEnv[5].name=AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH \
-    --set commonEnv[5].value=s3://$S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID/xcom \
-    --set-file dagBundleConfigList="$DAG_BUNDLE_CONFIG_FILE" \
-    "${HELM_GIT_CONNECTION_ARGS[@]}" \
-    --set annotations."eks\.amazonaws\.com/role-arn"="$AGENT_IAM_ROLE_ARN" \
-    --set openLineage.namespace=$ASTRO_DEPLOYMENT_NAMESPACE \
-    --set openLineage.endpoint="/api/v1/lineage?ASTRO_DEPLOYMENT_ID=$ASTRO_DEPLOYMENT_ID&ASTRO_DEPLOYMENT_NAMESPACE=$ASTRO_DEPLOYMENT_NAMESPACE&ASTRO_ORGANIZATION_ID=$ASTRO_ORGANIZATION_ID&ASTRO_WORKSPACE_ID=$ASTRO_WORKSPACE_ID" \
+  HELM_ARGS=(
+    install astro-agent astronomer/astro-remote-execution-agent
+    -n default -f values.yaml
+    --set resourceNamePrefix="$REGION_KEY"
+    --set astroDeploymentAPIURL="$ASTRO_DEPLOYMENT_API_URL"
+    --set image="$ECR_REPO_URL:$IMAGE_TAG"
+    --set imagePullSecretName=image-pull-secret
+    --set agentTokenSecretName=agent-token
+    --set commonEnv[0].name=ASTRO_ORGANIZATION_ID
+    --set commonEnv[0].value="$ASTRO_ORGANIZATION_ID"
+    --set commonEnv[1].name=ASTRO_WORKSPACE_ID
+    --set commonEnv[1].value="$ASTRO_WORKSPACE_ID"
+    --set commonEnv[2].name=ASTRO_DEPLOYMENT_ID
+    --set commonEnv[2].value="$ASTRO_DEPLOYMENT_ID"
+    --set commonEnv[3].name=ASTRO_DEPLOYMENT_NAMESPACE
+    --set commonEnv[3].value="$ASTRO_DEPLOYMENT_NAMESPACE"
+    --set commonEnv[4].name=AWS_REGION
+    --set commonEnv[4].value="$REGION"
+    --set commonEnv[5].name=AIRFLOW__COMMON_IO__XCOM_OBJECTSTORAGE_PATH
+    --set commonEnv[5].value="s3://$S3_BUCKET_NAME/$ASTRO_DEPLOYMENT_ID/xcom"
+    --set-file dagBundleConfigList="$DAG_BUNDLE_CONFIG_FILE"
+  )
+  if ((${#HELM_GIT_CONNECTION_ARGS[@]})); then
+    HELM_ARGS+=("${HELM_GIT_CONNECTION_ARGS[@]}")
+  fi
+  HELM_ARGS+=(
+    --set annotations."eks\.amazonaws\.com/role-arn"="$AGENT_IAM_ROLE_ARN"
+    --set openLineage.namespace="$ASTRO_DEPLOYMENT_NAMESPACE"
+    --set openLineage.endpoint="/api/v1/lineage?ASTRO_DEPLOYMENT_ID=$ASTRO_DEPLOYMENT_ID&ASTRO_DEPLOYMENT_NAMESPACE=$ASTRO_DEPLOYMENT_NAMESPACE&ASTRO_ORGANIZATION_ID=$ASTRO_ORGANIZATION_ID&ASTRO_WORKSPACE_ID=$ASTRO_WORKSPACE_ID"
     --set openLineage.apiKeySecret=deployment-api-token
+  )
+  helm "${HELM_ARGS[@]}"
 
   echo "$REGION_KEY: Deployment complete."
 done
